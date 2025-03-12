@@ -1,59 +1,65 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
-import * as Location from 'expo-location';
+import { useRoute } from '@react-navigation/native';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../firebaseConfig';
 
 const MapScreen = () => {
-  const [location, setLocation] = useState(null);
-  const [region, setRegion] = useState(null);
-
-  // Lista de pontos de coleta fixos
-  const recyclingPoints = [
-    { id: 1, latitude: -23.55052, longitude: -46.633308, title: "Ponto A", description: "Coleta de plástico e vidro" },
-    { id: 2, latitude: -23.55652, longitude: -46.637308, title: "Ponto B", description: "Coleta de papel e metal" },
-    { id: 3, latitude: -23.55852, longitude: -46.640308, title: "Ponto C", description: "Coleta de óleo de cozinha" },
-  ];
+  const route = useRoute();
+  const { material } = route.params || {};
+  const [pontos, setPontos] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permissão negada', 'O app precisa de acesso à localização para funcionar.');
-        return;
+    const fetchPontosColeta = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "pontos_coleta"));
+        const listaPontos = [];
+
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          if (data.materiais.includes(material)) { // Filtra pelo material selecionado
+            listaPontos.push({
+              id: doc.id,
+              ...data,
+            });
+          }
+        });
+
+        setPontos(listaPontos);
+      } catch (error) {
+        console.error("Erro ao buscar pontos de coleta:", error);
+      } finally {
+        setLoading(false);
       }
+    };
 
-      let userLocation = await Location.getCurrentPositionAsync({});
-      setLocation(userLocation.coords);
-
-      setRegion({
-        latitude: userLocation.coords.latitude,
-        longitude: userLocation.coords.longitude,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
-      });
-    })();
-  }, []);
+    fetchPontosColeta();
+  }, [material]);
 
   return (
     <View style={styles.container}>
-      {region ? (
-        <MapView
-          style={styles.map}
-          region={region}
-          showsUserLocation={true}
-          followsUserLocation={true}
-        >
-          {/* Adicionando os pontos de coleta no mapa */}
-          {recyclingPoints.map((point) => (
+      {loading ? (
+        <ActivityIndicator size="large" color="#63e6be" />
+      ) : (
+        <MapView style={styles.map} initialRegion={{
+          latitude: pontos[0]?.latitude || -23.55052,
+          longitude: pontos[0]?.longitude || -46.633308,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        }}>
+          {pontos.map((ponto) => (
             <Marker
-              key={point.id}
-              coordinate={{ latitude: point.latitude, longitude: point.longitude }}
-              title={point.title}
-              description={point.description}
+              key={ponto.id}
+              coordinate={{ latitude: ponto.latitude, longitude: ponto.longitude }}
+              title={ponto.nome}
+              description={`Materiais aceitos: ${ponto.materiais.join(", ")}`}
             />
           ))}
         </MapView>
-      ) : null}
+      )}
+      <Text style={styles.texto}>Locais para descartar: {material}</Text>
     </View>
   );
 };
@@ -63,8 +69,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   map: {
-    width: '100%',
-    height: '100%',
+    flex: 1,
+  },
+  texto: {
+    position: 'absolute',
+    top: 20,
+    left: 10,
+    right: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    padding: 10,
+    borderRadius: 8,
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
 

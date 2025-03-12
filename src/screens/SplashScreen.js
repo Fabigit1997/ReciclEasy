@@ -14,13 +14,15 @@ const SplashScreen = ({ navigation }) => {
     async function playSound() {
       try {
         const { sound } = await Audio.Sound.createAsync(
-          require('../assets/piano.logo.mp3') // Corrigido o caminho do arquivo
+          require('../assets/piano.log.mp3')
         );
+        await sound.setPositionAsync(0); // Reinicia o som
         await sound.playAsync();
       } catch (error) {
         console.log('Erro ao carregar som:', error);
       }
     }
+    
 
     playSound();
 
@@ -29,8 +31,16 @@ const SplashScreen = ({ navigation }) => {
       toValue: 1,
       duration: 2000,
       easing: Easing.linear,
-      useNativeDriver: true,
+      useNativeDriver: false,
     }).start();
+    <Animated.Text 
+    style={[
+      styles.welcomeText, 
+      { opacity: fadeInRecicle }
+    ]}
+  >
+    Bem-vindo ao ReciclEsye!
+  </Animated.Text>
 
     // Animação dos textos com efeito de fade-in e subida
     Animated.sequence([
@@ -63,6 +73,8 @@ const SplashScreen = ({ navigation }) => {
           useNativeDriver: true,
         }),
       ]),
+     
+
     ]).start();
 
     // Ir para a tela de cadastro após 5 segundos
@@ -89,15 +101,16 @@ const SplashScreen = ({ navigation }) => {
           },
         ]}
       />
-      <Animated.Text style={[styles.text, { opacity: fadeInRecicle, transform: [{ translateY: slideUpText }] }]}>
-        Recicle
-      </Animated.Text>
-      <Animated.Text style={[styles.text, { opacity: fadeInRespeite, transform: [{ translateY: slideUpText }] }]}>
-        Respeite
-      </Animated.Text>
-      <Animated.Text style={[styles.text, { opacity: fadeInRepense, transform: [{ translateY: slideUpText }] }]}>
-        Repense
-      </Animated.Text>
+     <Animated.Text style={[styles.text, { opacity: fadeInRecicle, transform: [{ translateY: slideUpText }] }]}>
+  Recicle
+</Animated.Text>
+<Animated.Text style={[styles.text, { opacity: fadeInRespeite }]}>
+  Respeite
+</Animated.Text>
+<Animated.Text style={[styles.text, { opacity: fadeInRepense }]}>
+  Repense
+</Animated.Text>
+
     </View>
   );
 };
@@ -123,6 +136,17 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 5,
   },
+  welcomeText: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 20,
+    textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 5,
+  },
+  
 });
 
 export default SplashScreen;

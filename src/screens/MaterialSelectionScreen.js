@@ -1,28 +1,44 @@
 import React, { useState } from 'react';
-import { View, Text, Button, TouchableOpacity, Modal, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, StyleSheet } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useNavigation } from '@react-navigation/native';
 
-const MaterialSelectionScreen = ({ navigation }) => {
-  // Estado para controlar a exibição do modal
+const MaterialSelectionScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedMaterial, setSelectedMaterial] = useState('');
+  const navigation = useNavigation();
 
-  // Função para abrir o modal e selecionar o material
+  // Pontos de coleta próximos para cada material
+  const pontosDeColeta = {
+    'Plástico': { latitude: -23.55052, longitude: -46.633308 },
+    'Papel': { latitude: -23.556522, longitude: -46.645308 },
+    'Metal': { latitude: -23.560922, longitude: -46.638308 },
+    'Vidro': { latitude: -23.545520, longitude: -46.635308 },
+    'Óleo de cozinha': { latitude: -23.558000, longitude: -46.640500 },
+    'Tóxicos': { latitude: -23.552000, longitude: -46.642800 }
+  };
+
+  // Quando o usuário escolhe um material
   const handleMaterialSelect = (material) => {
-    setSelectedMaterial(material);  // Define o material selecionado
-    setModalVisible(false);  // Fecha o modal após a seleção
-    navigation.navigate('Map', { material });  // Navega para a tela do mapa com o material selecionado
+    setSelectedMaterial(material);
+    setModalVisible(false);
+
+    const local = pontosDeColeta[material];
+    if (local) {
+      navigation.navigate('Map', {
+        latitude: local.latitude,
+        longitude: local.longitude,
+        materialSelecionado: material
+      });
+    }
   };
 
   return (
     <View style={styles.container}>
-    
-      
-      {/* Botão que abre o modal */}
       <TouchableOpacity style={styles.button} onPress={() => setModalVisible(true)}>
         <Text style={styles.buttonText}>Selecione o Material</Text>
       </TouchableOpacity>
-      
-      {/* Modal com a lista de materiais */}
+
       <Modal
         animationType="slide"
         transparent={true}
@@ -32,25 +48,14 @@ const MaterialSelectionScreen = ({ navigation }) => {
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Escolha um Material:</Text>
-            <TouchableOpacity style={styles.materialButton} onPress={() => handleMaterialSelect('Plástico')}>
-              <Text style={styles.materialText}>Plástico</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.materialButton} onPress={() => handleMaterialSelect('Papel')}>
-              <Text style={styles.materialText}>Papel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.materialButton} onPress={() => handleMaterialSelect('Metal')}>
-              <Text style={styles.materialText}>Metal</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.materialButton} onPress={() => handleMaterialSelect('Vidro')}>
-              <Text style={styles.materialText}>Vidro</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.materialButton} onPress={() => handleMaterialSelect('Oléo de cozinha')}>
-              <Text style={styles.materialText}>Oléo de cozinha</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.materialButton} onPress={() => handleMaterialSelect('Tóxicos')}>
-              <Text style={styles.materialText}>Tóxicos</Text>
-            </TouchableOpacity>
+
+            {Object.keys(pontosDeColeta).map((material, index) => (
+              <TouchableOpacity key={index} style={styles.materialButton} onPress={() => handleMaterialSelect(material)}>
+                <Icon name={getIconName(material)} size={24} color="white" />
+                <Text style={styles.materialText}>{material}</Text>
+              </TouchableOpacity>
+            ))}
+
             <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
               <Text style={styles.closeText}>Fechar</Text>
             </TouchableOpacity>
@@ -58,31 +63,39 @@ const MaterialSelectionScreen = ({ navigation }) => {
         </View>
       </Modal>
 
-      {/* Exibindo material selecionado */}
       {selectedMaterial ? <Text style={styles.selectedMaterialText}>Você escolheu: {selectedMaterial}</Text> : null}
     </View>
   );
 };
 
+// Função para retornar o ícone correspondente a cada material
+const getIconName = (material) => {
+  const icons = {
+    'Plástico': 'recycle',
+    'Papel': 'file-document-outline',
+    'Metal': 'silverware-fork-knife',
+    'Vidro': 'glass-fragile',
+    'Óleo de cozinha': 'bottle-tonic',
+    'Tóxicos': 'biohazard'
+  };
+  return icons[material] || 'help-circle-outline';
+};
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#528c59', // Cor verde claro para o fundo
+    backgroundColor: '#E8F5E9', // Verde claro
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
   button: {
-    backgroundColor: '#4CAF50',  // Cor verde para o botão
-    paddingVertical: 15,
-    paddingHorizontal: 30,
-    borderRadius: 5,
+    backgroundColor: '#63e6be',  // Verde escuro
+    paddingVertical: 12,
+    paddingHorizontal: 80,
+    borderRadius: 10,
     marginBottom: 20,
+    elevation: 3,
   },
   buttonText: {
     color: 'white',
@@ -93,47 +106,55 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',  // Fundo escuro semitransparente
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    backgroundColor: 'white',
+    backgroundColor: '#63e6be',
     padding: 20,
     borderRadius: 10,
     width: '80%',
+    alignItems: 'center',
   },
   modalTitle: {
     fontSize: 20,
     marginBottom: 15,
     fontWeight: 'bold',
+    color: 'white',
   },
   materialButton: {
-    backgroundColor: '#f0f0f0', // Cor de fundo branco para cada opção
+    backgroundColor: '#28c7a3',
     paddingVertical: 12,
     marginBottom: 10,
     borderRadius: 5,
     alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 10,
+    width: '100%',
   },
   materialText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: 'white',
   },
   closeButton: {
-    backgroundColor: '#f44336', // Cor vermelha para o botão de fechar
+    backgroundColor: 'white',
     paddingVertical: 12,
     marginTop: 15,
     borderRadius: 5,
     alignItems: 'center',
+    width: '100%',
   },
   closeText: {
     fontSize: 18,
-    color: 'white',
+    color: '#f44336',
     fontWeight: 'bold',
   },
   selectedMaterialText: {
     fontSize: 18,
     marginTop: 20,
     fontWeight: 'bold',
+    color: '#333',
   },
 });
 
