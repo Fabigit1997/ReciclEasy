@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Modal, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, StyleSheet, ImageBackground } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
 
@@ -34,37 +34,42 @@ const MaterialSelectionScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <TouchableOpacity style={styles.button} onPress={() => setModalVisible(true)}>
-        <Text style={styles.buttonText}>Selecione o Material</Text>
-      </TouchableOpacity>
+    <ImageBackground 
+      source={require('../assets/TelaSeleçãoMaterial.png')} // Caminho correto para a imagem
+      style={styles.backgroundImage}
+    >
+      <View style={styles.container}>
+        <TouchableOpacity style={styles.button} onPress={() => setModalVisible(true)}>
+          <Text style={styles.buttonText}>Selecione o Material</Text>
+        </TouchableOpacity>
 
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Escolha um Material:</Text>
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Escolha um Material:</Text>
 
-            {Object.keys(pontosDeColeta).map((material, index) => (
-              <TouchableOpacity key={index} style={styles.materialButton} onPress={() => handleMaterialSelect(material)}>
-                <Icon name={getIconName(material)} size={24} color="white" />
-                <Text style={styles.materialText}>{material}</Text>
+              {Object.keys(pontosDeColeta).map((material, index) => (
+                <TouchableOpacity key={index} style={styles.materialButton} onPress={() => handleMaterialSelect(material)}>
+                  <Icon name={getIconName(material)} size={24} color="white" />
+                  <Text style={styles.materialText}>{material}</Text>
+                </TouchableOpacity>
+              ))}
+
+              <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
+                <Text style={styles.closeText}>Fechar</Text>
               </TouchableOpacity>
-            ))}
-
-            <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
-              <Text style={styles.closeText}>Fechar</Text>
-            </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </Modal>
+        </Modal>
 
-      {selectedMaterial ? <Text style={styles.selectedMaterialText}>Você escolheu: {selectedMaterial}</Text> : null}
-    </View>
+        {selectedMaterial ? <Text style={styles.selectedMaterialText}>Você escolheu: {selectedMaterial}</Text> : null}
+      </View>
+    </ImageBackground>
   );
 };
 
@@ -82,9 +87,15 @@ const getIconName = (material) => {
 };
 
 const styles = StyleSheet.create({
+  backgroundImage: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    height: '100%',
+  },
   container: {
     flex: 1,
-    backgroundColor: '#E8F5E9', // Verde claro
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
