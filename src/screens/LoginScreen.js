@@ -19,7 +19,7 @@ export default function LoginScreen({ navigation }) {
     try {
       await signInWithEmailAndPassword(auth, email.trim(), password);
       Alert.alert("Sucesso!", "Login realizado com sucesso!");
-      navigation.replace("MaterialSelection"); // Correção na navegação
+      navigation.replace("Home"); // Certifique-se de que está correto no Stack.Navigator
     } catch (error) {
       if (error.code === 'auth/user-not-found') {
         Alert.alert("Erro", "Este e-mail não está cadastrado.");
@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   registerText: {
-    color: '63e6be',
+    color: '#63e6be',
     fontSize: 16,
   },
 });

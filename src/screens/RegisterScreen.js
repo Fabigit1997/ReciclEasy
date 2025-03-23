@@ -1,57 +1,119 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import { auth } from '../firebaseConfig';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image, ActivityIndicator } from 'react-native';
+import { auth, db, storage } from '../firebaseConfig';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { setDoc, doc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import * as ImagePicker from 'expo-image-picker';
 
 export default function RegisterScreen({ navigation }) {
+  const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
+  const [telefone, setTelefone] = useState('');
+  const [endereco, setEndereco] = useState('');
+  const [cep, setCep] = useState('');
   const [password, setPassword] = useState('');
+  const [avatar, setAvatar] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
-  const validateEmail = (email) => {
-    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-    return emailRegex.test(email);
+  // Função para validar o CEP
+  const validarCep = (cepDigitado) => {
+    const cepRegex = /^[0-9]{8}$/; // Apenas números e exatamente 8 dígitos
+    return cepRegex.test(cepDigitado);
   };
 
-  const validatePassword = (password) => {
-    return password.length >= 6; 
+  // Função para buscar endereço pelo CEP
+  const buscarEndereco = async (cepDigitado) => {
+    if (!validarCep(cepDigitado)) {
+      Alert.alert('Erro', 'CEP inválido! Digite um CEP com 8 números.');
+      setEndereco('');
+      return;
+    }
+
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cepDigitado}/json/`);
+      const data = await response.json();
+      if (data.erro) {
+        Alert.alert('Erro', 'CEP não encontrado!');
+        setEndereco('');
+      } else {
+        setEndereco(`${data.logradouro}, ${data.bairro}, ${data.localidade} - ${data.uf}`);
+      }
+    } catch (error) {
+      Alert.alert('Erro', 'Falha ao buscar o endereço!');
+    }
+  };
+
+  // Função para selecionar e fazer upload da imagem
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setAvatar(result.assets[0].uri);
+    }
+  };
+
+  // Função para fazer upload da imagem para o Firebase Storage
+  const uploadImage = async (uri) => {
+    if (!uri) return null;
+
+    setUploading(true);
+    try {
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      const filename = `avatars/${auth.currentUser.uid}.jpg`;
+      const storageRef = ref(storage, filename);
+      
+      await uploadBytes(storageRef, blob);
+      const url = await getDownloadURL(storageRef);
+      return url;
+    } catch (error) {
+      Alert.alert('Erro', 'Falha ao enviar a imagem.');
+      return null;
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleRegister = async () => {
-    const trimmedEmail = email.trim();
-    const trimmedPassword = password.trim();
-
-    if (!trimmedEmail || !trimmedPassword) {
-      Alert.alert("Erro", "Por favor, preencha todos os campos!");
-      return;
-    }
-
-    if (!validateEmail(trimmedEmail)) {
-      Alert.alert("Erro", "Por favor, insira um e-mail válido!");
-      return;
-    }
-
-    if (!validatePassword(trimmedPassword)) {
-      Alert.alert("Erro", "A senha deve ter pelo menos 6 caracteres.");
+    if (!nome || !telefone || !endereco || !cep || !password) {
+      Alert.alert('Erro', 'Preencha todos os campos obrigatórios!');
       return;
     }
 
     setLoading(true);
     try {
-      await createUserWithEmailAndPassword(auth, trimmedEmail, trimmedPassword);
-      Alert.alert("Sucesso!", "Conta criada com sucesso!");
-      navigation.navigate("Login");
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const userId = userCredential.user.uid;
+
+      // Faz o upload da imagem e pega a URL
+      const avatarUrl = await uploadImage(avatar);
+
+      await setDoc(doc(db, 'usuario', userId), {
+        nome,
+        email,
+        telefone,
+        endereco,
+        cep,
+        avatar: avatarUrl || null,
+      });
+
+      Alert.alert('Sucesso!', 'Cadastro realizado com sucesso!');
+      navigation.navigate('Login');
     } catch (error) {
-      let errorMessage = "Falha ao criar conta. Tente novamente.";
+      let errorMessage = 'Erro ao cadastrar. Tente novamente.';
       if (error.code === 'auth/email-already-in-use') {
-        errorMessage = "Este e-mail já está cadastrado.";
+        errorMessage = 'Este e-mail já está cadastrado.';
       } else if (error.code === 'auth/weak-password') {
-        errorMessage = "A senha é muito fraca.";
-      } else if (error.code === 'auth/invalid-email') {
-        errorMessage = "E-mail inválido.";
+        errorMessage = 'A senha deve ter pelo menos 6 caracteres.';
       }
-      Alert.alert("Erro", errorMessage);
+      Alert.alert('Erro', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -59,36 +121,38 @@ export default function RegisterScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-     
-      <Text style={styles.title}>Cadastro</Text>
+      <Text style={styles.title}>Cadastro de Usuario</Text>
 
-      <View style={styles.inputContainer}>
-        <Icon name="email" size={20} color="#63e6be0" style={styles.icon} />
-        <TextInput
-          style={styles.input}
-          placeholder="E-mail"
-          placeholderTextColor="#666"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-      </View>
+      <TouchableOpacity style={styles.avatarContainer} onPress={pickImage}>
+        {avatar ? (
+          <Image source={{ uri: avatar }} style={styles.avatar} />
+        ) : (
+          <Text style={styles.avatarText}>Selecionar Foto</Text>
+        )}
+      </TouchableOpacity>
 
-      <View style={styles.inputContainer}>
-        <Icon name="lock" size={20} color="#4CAF50" style={styles.icon} />
-        <TextInput
-          style={styles.input}
-          placeholder="Senha"
-          placeholderTextColor="#666"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
-      </View>
+      <TextInput style={styles.input} placeholder="Nome Completo" value={nome} onChangeText={setNome} />
+      <TextInput style={styles.input} placeholder="E-mail (opcional)" value={email} onChangeText={setEmail} keyboardType="email-address" />
+      <TextInput style={styles.input} placeholder="Telefone" value={telefone} onChangeText={setTelefone} keyboardType="phone-pad" />
 
-      <TouchableOpacity style={styles.button} onPress={handleRegister} disabled={loading}>
-        <Text style={styles.buttonText}>{loading ? "Carregando..." : "Cadastrar"}</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="CEP"
+        value={cep}
+        onChangeText={(text) => {
+          setCep(text);
+          if (text.length === 8) buscarEndereco(text);
+        }}
+        keyboardType="numeric"
+        maxLength={8}
+      />
+
+      <TextInput style={styles.input} placeholder="Endereço" value={endereco} onChangeText={setEndereco} editable={false} />
+
+      <TextInput style={styles.input} placeholder="Senha" value={password} onChangeText={setPassword} secureTextEntry />
+
+      <TouchableOpacity style={styles.button} onPress={handleRegister} disabled={loading || uploading}>
+        {loading || uploading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Cadastrar</Text>}
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.registerButton} onPress={() => navigation.navigate('Login')}>
@@ -101,36 +165,44 @@ export default function RegisterScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#E8F5E9',
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#E8F5E9',
     padding: 20,
   },
-
-  
   title: {
     fontSize: 26,
     fontWeight: 'bold',
     color: '#2E7D32',
     marginBottom: 20,
   },
-  inputContainer: {
-    flexDirection: 'row',
+  avatarContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#ddd',
+    justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    marginVertical: 10,
-    width: '100%',
-    elevation: 3,
+    marginBottom: 15,
+    overflow: 'hidden',
   },
-  icon: {
-    marginRight: 10,
+  avatar: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 50,
+  },
+  avatarText: {
+    color: '#777',
+    fontSize: 14,
   },
   input: {
-    flex: 1,
+    width: '100%',
     height: 50,
-    color: '#333',
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    paddingHorizontal: 15,
+    marginVertical: 10,
+    elevation: 3,
   },
   button: {
     backgroundColor: '#4CAF50',
@@ -144,12 +216,5 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
-  },
-  registerButton: {
-    marginTop: 20,
-  },
-  registerText: {
-    color: '#2E7D32',
-    fontSize: 16,
   },
 });
