@@ -1,19 +1,36 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image, TextInput } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { FontAwesome5 } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 
 const HomeScreen = ({ route }) => {
   const navigation = useNavigation();
   const { nome, email, tipo, avatar } = route.params || {};
   const [mostrarDados, setMostrarDados] = useState(false);
+  const [selectedAvatar, setSelectedAvatar] = useState(avatar); // para armazenar a foto selecionada
+  const [loading, setLoading] = useState(false);
+
+  // Função para selecionar a imagem
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setSelectedAvatar(result.assets[0].uri);
+    }
+  };
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.avatarContainer}>
-          {avatar ? (
-            <Image source={{ uri: avatar }} style={styles.avatar} />
+        <TouchableOpacity style={styles.avatarContainer} onPress={pickImage}>
+          {selectedAvatar ? (
+            <Image source={{ uri: selectedAvatar }} style={styles.avatar} />
           ) : (
             <Text style={styles.avatarText}>Selecionar Foto</Text>
           )}

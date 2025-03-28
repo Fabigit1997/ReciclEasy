@@ -8,14 +8,17 @@ const MaterialSelectionScreen = () => {
   const [selectedMaterial, setSelectedMaterial] = useState('');
   const navigation = useNavigation();
 
-  // Pontos de coleta próximos para cada material
+  // Pontos de coleta para cada material
   const pontosDeColeta = {
     'Plástico': { latitude: -23.55052, longitude: -46.633308 },
     'Papel': { latitude: -23.556522, longitude: -46.645308 },
     'Metal': { latitude: -23.560922, longitude: -46.638308 },
     'Vidro': { latitude: -23.545520, longitude: -46.635308 },
     'Óleo de cozinha': { latitude: -23.558000, longitude: -46.640500 },
-    'Tóxicos': { latitude: -23.552000, longitude: -46.642800 }
+    'Tóxicos': { latitude: -23.552000, longitude: -46.642800 },
+    'Doação de Roupa': { latitude: -23.554000, longitude: -46.646800 },
+    'Doação de Livros': { latitude: -23.557000, longitude: -46.649000 },
+    'Entulho': { latitude: -23.559500, longitude: -46.650500 }
   };
 
   // Quando o usuário escolhe um material
@@ -81,7 +84,10 @@ const getIconName = (material) => {
     'Metal': 'silverware-fork-knife',
     'Vidro': 'glass-fragile',
     'Óleo de cozinha': 'bottle-tonic',
-    'Tóxicos': 'biohazard'
+    'Tóxicos': 'biohazard',
+    'Doação de Roupa': 'tshirt-crew',
+    'Doação de Livros': 'book-open-page-variant',
+    'Entulho': 'dump-truck'
   };
   return icons[material] || 'help-circle-outline';
 };

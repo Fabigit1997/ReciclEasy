@@ -7,6 +7,7 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [secureText, setSecureText] = useState(true); // Estado para esconder/exibir senha
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
@@ -19,7 +20,7 @@ export default function LoginScreen({ navigation }) {
     try {
       await signInWithEmailAndPassword(auth, email.trim(), password);
       Alert.alert("Sucesso!", "Login realizado com sucesso!");
-      navigation.replace("Home"); // Certifique-se de que está correto no Stack.Navigator
+      navigation.replace("Home"); // Correção na navegação
     } catch (error) {
       if (error.code === 'auth/user-not-found') {
         Alert.alert("Erro", "Este e-mail não está cadastrado.");
@@ -56,17 +57,25 @@ export default function LoginScreen({ navigation }) {
           style={styles.input}
           placeholder="Senha"
           placeholderTextColor="#666"
-          secureTextEntry
+          secureTextEntry={secureText} // Alterna entre senha oculta ou visível
           value={password}
           onChangeText={setPassword}
         />
+        <TouchableOpacity onPress={() => setSecureText(!secureText)}>
+          <Icon 
+            name={secureText ? "visibility-off" : "visibility"} 
+            size={20} 
+            color="#4CAF50" 
+            style={styles.icon} 
+          />
+        </TouchableOpacity>
       </View>
 
       <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
         <Text style={styles.buttonText}>{loading ? "Carregando..." : "Entrar"}</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.registerButton} onPress={() => navigation.navigate('Register')}>
+      <TouchableOpacity style={styles.registerButton} onPress={() => navigation.navigate('Home')}>
         <Text style={styles.registerText}>Criar uma conta</Text>
       </TouchableOpacity>
     </View>
@@ -126,3 +135,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 });
+
+

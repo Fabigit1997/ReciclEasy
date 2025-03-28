@@ -36,7 +36,7 @@ const SplashScreen = ({ navigation }) => {
     >
       <View style={styles.overlay}>
         {/* Logo do aplicativo */}
-        <Text style={styles.logo}>ReciclEsye</Text>
+        <Text style={styles.logo}>ReciclEasy</Text>
         {/* Ícone de Reciclagem com animação */}
         <Animated.View style={{ transform: [{ rotate }] }}>
           <MaterialCommunityIcons name="recycle" size={150} color="white" />

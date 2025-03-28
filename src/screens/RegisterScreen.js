@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image, ActivityIndicator } from 'react-native';
-import { auth, db, storage } from '../firebaseConfig';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { auth, db } from '../firebaseConfig';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { setDoc, doc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import * as ImagePicker from 'expo-image-picker';
 
 export default function RegisterScreen({ navigation }) {
   const [nome, setNome] = useState('');
@@ -13,9 +11,7 @@ export default function RegisterScreen({ navigation }) {
   const [endereco, setEndereco] = useState('');
   const [cep, setCep] = useState('');
   const [password, setPassword] = useState('');
-  const [avatar, setAvatar] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
 
   // Função para validar o CEP
   const validarCep = (cepDigitado) => {
@@ -45,42 +41,6 @@ export default function RegisterScreen({ navigation }) {
     }
   };
 
-  // Função para selecionar e fazer upload da imagem
-  const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
-
-    if (!result.canceled) {
-      setAvatar(result.assets[0].uri);
-    }
-  };
-
-  // Função para fazer upload da imagem para o Firebase Storage
-  const uploadImage = async (uri) => {
-    if (!uri) return null;
-
-    setUploading(true);
-    try {
-      const response = await fetch(uri);
-      const blob = await response.blob();
-      const filename = `avatars/${auth.currentUser.uid}.jpg`;
-      const storageRef = ref(storage, filename);
-      
-      await uploadBytes(storageRef, blob);
-      const url = await getDownloadURL(storageRef);
-      return url;
-    } catch (error) {
-      Alert.alert('Erro', 'Falha ao enviar a imagem.');
-      return null;
-    } finally {
-      setUploading(false);
-    }
-  };
-
   const handleRegister = async () => {
     if (!nome || !telefone || !endereco || !cep || !password) {
       Alert.alert('Erro', 'Preencha todos os campos obrigatórios!');
@@ -92,16 +52,12 @@ export default function RegisterScreen({ navigation }) {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const userId = userCredential.user.uid;
 
-      // Faz o upload da imagem e pega a URL
-      const avatarUrl = await uploadImage(avatar);
-
       await setDoc(doc(db, 'usuario', userId), {
         nome,
         email,
         telefone,
         endereco,
         cep,
-        avatar: avatarUrl || null,
       });
 
       Alert.alert('Sucesso!', 'Cadastro realizado com sucesso!');
@@ -123,14 +79,6 @@ export default function RegisterScreen({ navigation }) {
     <View style={styles.container}>
       <Text style={styles.title}>Cadastro de Usuario</Text>
 
-      <TouchableOpacity style={styles.avatarContainer} onPress={pickImage}>
-        {avatar ? (
-          <Image source={{ uri: avatar }} style={styles.avatar} />
-        ) : (
-          <Text style={styles.avatarText}>Selecionar Foto</Text>
-        )}
-      </TouchableOpacity>
-
       <TextInput style={styles.input} placeholder="Nome Completo" value={nome} onChangeText={setNome} />
       <TextInput style={styles.input} placeholder="E-mail (opcional)" value={email} onChangeText={setEmail} keyboardType="email-address" />
       <TextInput style={styles.input} placeholder="Telefone" value={telefone} onChangeText={setTelefone} keyboardType="phone-pad" />
@@ -151,8 +99,8 @@ export default function RegisterScreen({ navigation }) {
 
       <TextInput style={styles.input} placeholder="Senha" value={password} onChangeText={setPassword} secureTextEntry />
 
-      <TouchableOpacity style={styles.button} onPress={handleRegister} disabled={loading || uploading}>
-        {loading || uploading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Cadastrar</Text>}
+      <TouchableOpacity style={styles.button} onPress={handleRegister} disabled={loading}>
+        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Cadastrar</Text>}
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.registerButton} onPress={() => navigation.navigate('Login')}>
@@ -176,25 +124,6 @@ const styles = StyleSheet.create({
     color: '#2E7D32',
     marginBottom: 20,
   },
-  avatarContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#ddd',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 15,
-    overflow: 'hidden',
-  },
-  avatar: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 50,
-  },
-  avatarText: {
-    color: '#777',
-    fontSize: 14,
-  },
   input: {
     width: '100%',
     height: 50,
@@ -216,5 +145,12 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  registerButton: {
+    marginTop: 20,
+  },
+  registerText: {
+    color: '#00796B',
+    fontSize: 16,
   },
 });
