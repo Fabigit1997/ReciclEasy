@@ -77,7 +77,7 @@ const HomeScreen = ({ route }) => {
 
         <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Splash')}>
           <FontAwesome5 name="arrow-left" size={24} color="red" />
-          <Text style={styles.iconText}>Voltar</Text>
+          <Text style={styles.iconText}>Sair</Text>
         </TouchableOpacity>
       </View>
     </View>

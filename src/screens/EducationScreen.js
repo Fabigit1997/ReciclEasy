@@ -1,6 +1,15 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { FontAwesome5 } from '@expo/vector-icons';  // FontAwesome5 para os ícones
+import { View, Text, TouchableOpacity, StyleSheet, Alert, Image } from 'react-native';
+
+const materials = [
+  { name: 'Plástico', color: 'red', image: require('../assets/lixeira-plastico.png.png') },
+  { name: 'Papel', color: 'blue', image: require('../assets/lixeira-papel.png.png') },
+  { name: 'Metal', color: 'yellow', image: require('../assets/lixeira-metal.png.png') },
+  { name: 'Metal', color: 'green', image: require('../assets/lixeira-vidro.png.png') },
+  { name: 'Metal', color: 'orange', image: require('../assets/lixeira-toxico.png.png') },
+ 
+];
+ 
 
 const EducationScreen = () => {
   const showMaterialInfo = (material) => {
@@ -11,31 +20,22 @@ const EducationScreen = () => {
     <View style={styles.container}>
       <Text style={styles.title}>Você Sabia?</Text>
       
-      <View style={styles.materialButtonsContainer}>
-        {/* Botões de materiais recicláveis com ícones */}
-        <TouchableOpacity style={[styles.materialButton, { backgroundColor: 'green' }]} onPress={() => showMaterialInfo('Plástico')}>
-          <FontAwesome5 name="recycle" size={30} color="white" />
-          <Text style={styles.materialText}>Plástico</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={[styles.materialButton, { backgroundColor: 'blue' }]} onPress={() => showMaterialInfo('Vidro')}>
-          <FontAwesome5 name="glass-martini" size={30} color="white" />
-          <Text style={styles.materialText}>Vidro</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={[styles.materialButton, { backgroundColor: 'yellow' }]} onPress={() => showMaterialInfo('Papel')}>
-          <FontAwesome5 name="newspaper" size={30} color="white" />
-          <Text style={styles.materialText}>Papel</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={[styles.materialButton, { backgroundColor: 'brown' }]} onPress={() => showMaterialInfo('Orgânico')}>
-          <FontAwesome5 name="leaf" size={30} color="white" />
-          <Text style={styles.materialText}>Orgânico</Text>
-        </TouchableOpacity>
+      <View style={styles.lixeiraContainer}>
+        {materials.map((item, index) => (
+          <TouchableOpacity 
+            key={index} 
+            style={[styles.lixeiraButton, { backgroundColor: item.color }]} 
+            onPress={() => showMaterialInfo(item.name)}
+          >
+            <Image source={item.image} style={styles.lixeiraImage} />
+          </TouchableOpacity>
+        ))}
       </View>
     </View>
   );
 };
+
+
 
 const styles = StyleSheet.create({
   container: {
@@ -50,24 +50,22 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 20,
   },
-  materialButtonsContainer: {
-    flexDirection: 'column',
-    alignItems: 'center',
-    width: '100%',
-  },
-  materialButton: {
+  lixeiraContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 15,
-    padding: 15,
-    borderRadius: 10,
-    width: '80%',
+    flexWrap: 'wrap',
     justifyContent: 'center',
   },
-  materialText: {
-    fontSize: 18,
-    marginLeft: 10,
-    color: 'white',
+  lixeiraButton: {
+    margin: 10,
+    padding: 10,
+    borderRadius: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  lixeiraImage: {
+    width: 80,
+    height: 100,
+    resizeMode: 'contain',
   },
 });
 

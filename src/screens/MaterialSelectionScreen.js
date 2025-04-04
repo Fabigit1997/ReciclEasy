@@ -14,11 +14,13 @@ const MaterialSelectionScreen = () => {
     'Papel': { latitude: -23.556522, longitude: -46.645308 },
     'Metal': { latitude: -23.560922, longitude: -46.638308 },
     'Vidro': { latitude: -23.545520, longitude: -46.635308 },
-    'Óleo de cozinha': { latitude: -23.558000, longitude: -46.640500 },
+   
     'Tóxicos': { latitude: -23.552000, longitude: -46.642800 },
+    'Entulho': { latitude: -23.559500, longitude: -46.650500 },
+    'Óleo de cozinha': { latitude: -23.558000, longitude: -46.640500 },
     'Doação de Roupa': { latitude: -23.554000, longitude: -46.646800 },
     'Doação de Livros': { latitude: -23.557000, longitude: -46.649000 },
-    'Entulho': { latitude: -23.559500, longitude: -46.650500 }
+    
   };
 
   // Quando o usuário escolhe um material
