@@ -38,17 +38,24 @@ const HomeScreen = ({ route }) => {
         <Text style={styles.greeting}>Olá, {nome || 'Usuário'}!</Text>
       </View>
 
-      <TouchableOpacity style={styles.button} onPress={() => setMostrarDados(!mostrarDados)}>
-        <Text style={styles.buttonText}>Meus Dados</Text>
-      </TouchableOpacity>
+      <View style={styles.dadosContainer}>
+  <TouchableOpacity onPress={() => setMostrarDados(!mostrarDados)}>
+    <Text style={styles.dadosTitulo}>Dados Pessoais</Text>
+  </TouchableOpacity>
 
-      {mostrarDados && (
-        <View style={styles.dadosContainer}>
-          <Text style={styles.dado}>Nome: {nome}</Text>
-          <Text style={styles.dado}>Email: {email}</Text>
-          <Text style={styles.dado}>Tipo: {tipo}</Text>
-        </View>
-      )}
+  {mostrarDados && (
+    <View style={styles.camposDados}>
+      <Text style={styles.dado}>Nome: {nome || ' '}</Text>
+      <Text style={styles.dado}>Email: {email || ' '}</Text>
+      <Text style={styles.dado}>Tipo: {tipo || ' '}</Text>
+    </View>
+  )}
+</View>
+
+
+
+      
+
 
       <View style={styles.content}>
         <View style={styles.summaryContainer}>
@@ -79,6 +86,8 @@ const HomeScreen = ({ route }) => {
           <FontAwesome5 name="arrow-left" size={24} color="red" />
           <Text style={styles.iconText}>Sair</Text>
         </TouchableOpacity>
+        
+
       </View>
     </View>
   );
@@ -87,7 +96,7 @@ const HomeScreen = ({ route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#E8F5E9',
+    backgroundColor: '#a8f9d2',
     padding: 20,
   },
   header: {
@@ -129,7 +138,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   dadosContainer: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#7ff1ca',
     padding: 10,
     borderRadius: 5,
     marginBottom: 20,
@@ -138,7 +147,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   summaryContainer: {
-    backgroundColor: '#5eeac2',
+    backgroundColor: '#00FF9C',
     padding: 15,
     borderRadius: 5,
     marginBottom: 15,
@@ -180,6 +189,19 @@ const styles = StyleSheet.create({
   iconText: {
     fontSize: 14,
   },
+
+  dado: {
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 5,
+  },
+  dadosTitulo: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#fff',
+  },
+  
 });
 
 export default HomeScreen;

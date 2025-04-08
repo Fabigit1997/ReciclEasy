@@ -9,17 +9,15 @@ export default function RegisterScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [telefone, setTelefone] = useState('');
   const [endereco, setEndereco] = useState('');
+  const [numeroResidencia, setNumeroResidencia] = useState('');
   const [cep, setCep] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Função para validar o CEP
-  const validarCep = (cepDigitado) => {
-    const cepRegex = /^[0-9]{8}$/; // Apenas números e exatamente 8 dígitos
-    return cepRegex.test(cepDigitado);
-  };
+  // Validação do CEP
+  const validarCep = (cepDigitado) => /^[0-9]{8}$/.test(cepDigitado);
 
-  // Função para buscar endereço pelo CEP
+  // Buscar endereço pelo CEP
   const buscarEndereco = async (cepDigitado) => {
     if (!validarCep(cepDigitado)) {
       Alert.alert('Erro', 'CEP inválido! Digite um CEP com 8 números.');
@@ -41,22 +39,38 @@ export default function RegisterScreen({ navigation }) {
     }
   };
 
+  // Formatar telefone (11)947195485
+  const formatarTelefone = (text) => {
+    const cleaned = text.replace(/\D/g, '');
+    if (cleaned.length <= 2) {
+      setTelefone(`(${cleaned}`);
+    } else if (cleaned.length <= 11) {
+      setTelefone(`(${cleaned.slice(0, 2)})${cleaned.slice(2, 11)}`);
+    } else {
+      setTelefone(`(${cleaned.slice(0, 2)})${cleaned.slice(2, 11)}`);
+    }
+  };
+
+  // Cadastrar
   const handleRegister = async () => {
-    if (!nome || !telefone || !endereco || !cep || !password) {
+    if (!nome || !telefone || !endereco || !cep || !numeroResidencia || !password) {
       Alert.alert('Erro', 'Preencha todos os campos obrigatórios!');
       return;
     }
 
+    const emailMinusculo = email.toLowerCase();
+
     setLoading(true);
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, emailMinusculo, password);
       const userId = userCredential.user.uid;
 
-      await setDoc(doc(db, 'usuario', userId), {
+      await setDoc(doc(db, 'Usuario', userId), {
         nome,
-        email,
+        email: emailMinusculo,
         telefone,
         endereco,
+        numeroResidencia,
         cep,
       });
 
@@ -79,9 +93,30 @@ export default function RegisterScreen({ navigation }) {
     <View style={styles.container}>
       <Text style={styles.title}>Cadastro de Usuario</Text>
 
-      <TextInput style={styles.input} placeholder="Nome Completo" value={nome} onChangeText={setNome} />
-      <TextInput style={styles.input} placeholder="E-mail (opcional)" value={email} onChangeText={setEmail} keyboardType="email-address" />
-      <TextInput style={styles.input} placeholder="Telefone" value={telefone} onChangeText={setTelefone} keyboardType="phone-pad" />
+      <TextInput
+        style={styles.input}
+        placeholder="Nome Completo"
+        value={nome}
+        onChangeText={setNome}
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder="E-mail (opcional)"
+        value={email}
+        onChangeText={(text) => setEmail(text.toLowerCase())}
+        keyboardType="email-address"
+        autoCapitalize="none"
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder="Telefone"
+        value={telefone}
+        onChangeText={formatarTelefone}
+        keyboardType="phone-pad"
+        maxLength={13}
+      />
 
       <TextInput
         style={styles.input}
@@ -95,9 +130,29 @@ export default function RegisterScreen({ navigation }) {
         maxLength={8}
       />
 
-      <TextInput style={styles.input} placeholder="Endereço" value={endereco} onChangeText={setEndereco} editable={false} />
+      <TextInput
+        style={styles.input}
+        placeholder="Endereço"
+        value={endereco}
+        onChangeText={setEndereco}
+        editable={false}
+      />
 
-      <TextInput style={styles.input} placeholder="Senha" value={password} onChangeText={setPassword} secureTextEntry />
+      <TextInput
+        style={styles.input}
+        placeholder="Número da residência"
+        value={numeroResidencia}
+        onChangeText={setNumeroResidencia}
+        keyboardType="numeric"
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder="Senha"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+      />
 
       <TouchableOpacity style={styles.button} onPress={handleRegister} disabled={loading}>
         {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Cadastrar</Text>}
@@ -115,13 +170,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#E8F5E9',
+    backgroundColor: '#a8f9d2',
     padding: 20,
   },
   title: {
     fontSize: 26,
     fontWeight: 'bold',
-    color: '#2E7D32',
+    color: '#15B392',
     marginBottom: 20,
   },
   input: {
@@ -134,7 +189,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   button: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#15B392',
     paddingVertical: 12,
     paddingHorizontal: 80,
     borderRadius: 10,
@@ -147,10 +202,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   registerButton: {
-    marginTop: 20,
+    marginTop: 15,
   },
   registerText: {
-    color: '#00796B',
     fontSize: 16,
+    color: '#2E7D32',
   },
 });

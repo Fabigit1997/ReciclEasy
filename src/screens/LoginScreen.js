@@ -45,7 +45,8 @@ export default function LoginScreen({ navigation }) {
           placeholder="Email"
           placeholderTextColor="#666"
           value={email}
-          onChangeText={(text) => setEmail(text.trim())}
+          onChangeText={(text) => setEmail(text.trim().toLowerCase())}
+
           keyboardType="email-address"
           autoCapitalize="none"
         />
@@ -85,7 +86,7 @@ export default function LoginScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#E8F5E9',
+    backgroundColor: '#a8f9d2',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -93,7 +94,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 26,
     fontWeight: 'bold',
-    color: '#2E7D32',
+    color: '#15B392',
     marginBottom: 20,
   },
   inputContainer: {
@@ -112,10 +113,10 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     height: 50,
-    color: '#333',
+    color: '#15B392',
   },
   button: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#15B392',
     paddingVertical: 12,
     paddingHorizontal: 80,
     borderRadius: 10,
@@ -131,7 +132,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   registerText: {
-    color: '#63e6be',
+    color: '#00FF9C',
     fontSize: 16,
   },
 });

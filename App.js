@@ -20,16 +20,16 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Splash" screenOptions={{ headerShown: false }}>
-  <Stack.Screen name="Splash" component={SplashScreen} />
+  <Stack.Screen name="" component={SplashScreen} />
   <Stack.Screen name="Escolha" component={EscolhaScreen} />
-  <Stack.Screen name="Register" component={RegisterScreen} />
-  <Stack.Screen name="RegisterCollector" component={RegisterCollectorScreen} />
-  <Stack.Screen name="Login" component={LoginScreen} />
+  <Stack.Screen name="Registro" component={RegisterScreen} />
+  <Stack.Screen name="Registro" component={RegisterCollectorScreen} />
+  <Stack.Screen name="" component={LoginScreen} />
   <Stack.Screen name="Home" component={HomeScreen} />  {/* HomeScreen registrada corretamente */}
-  <Stack.Screen name="MaterialSelection" component={MaterialSelectionScreen} />
+  <Stack.Screen name="" component={MaterialSelectionScreen} />
   <Stack.Screen name="Map" component={MapScreen} />
   <Stack.Screen name="Chat" component={ChatScreen} />
-  <Stack.Screen name="Education" component={EducationScreen} />
+  <Stack.Screen name="Conteudo Educativo" component={EducationScreen} />
 </Stack.Navigator>
 
     </NavigationContainer>
