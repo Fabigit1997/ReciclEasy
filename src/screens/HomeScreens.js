@@ -6,10 +6,9 @@ import * as ImagePicker from 'expo-image-picker';
 
 const HomeScreen = ({ route }) => {
   const navigation = useNavigation();
-  const { nome, email, tipo, avatar } = route.params || {};
+  const { nome, email, tipo, avatar, endereco, numeroResidencia, cep } = route.params || {};
   const [mostrarDados, setMostrarDados] = useState(false);
   const [selectedAvatar, setSelectedAvatar] = useState(avatar); // para armazenar a foto selecionada
-  const [loading, setLoading] = useState(false);
 
   // Função para selecionar a imagem
   const pickImage = async () => {
@@ -26,6 +25,7 @@ const HomeScreen = ({ route }) => {
   };
 
   return (
+    
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.avatarContainer} onPress={pickImage}>
@@ -37,40 +37,27 @@ const HomeScreen = ({ route }) => {
         </TouchableOpacity>
         <Text style={styles.greeting}>Olá, {nome || 'Usuário'}!</Text>
       </View>
-
+       
       <View style={styles.dadosContainer}>
-  <TouchableOpacity onPress={() => setMostrarDados(!mostrarDados)}>
-    <Text style={styles.dadosTitulo}>Dados Pessoais</Text>
-  </TouchableOpacity>
+        <TouchableOpacity onPress={() => setMostrarDados(!mostrarDados)}>
+          <Text style={styles.dadosTitulo}>Dados Pessoais</Text>
+        </TouchableOpacity>
 
-  {mostrarDados && (
-    <View style={styles.camposDados}>
-      <Text style={styles.dado}>Nome: {nome || ' '}</Text>
-      <Text style={styles.dado}>Email: {email || ' '}</Text>
-      <Text style={styles.dado}>Tipo: {tipo || ' '}</Text>
-    </View>
-  )}
-</View>
-
-
+        {mostrarDados && (
+          <View style={styles.camposDados}>
+            <Text style={styles.dado}>Nome: {nome || ' '}</Text>
+            <Text style={styles.dado}>Email: {email || ' '}</Text>
+            <Text style={styles.dado}>Tipo: {tipo || ' '}</Text>
+            <Text style={styles.dado}>Endereço: {endereco || ' '}</Text>
+            <Text style={styles.dado}>Número: {numeroResidencia || ' '}</Text>
+            <Text style={styles.dado}>CEP: {cep || ' '}</Text>
+          </View>
+        )}
+      </View>
 
       
 
-
-      <View style={styles.content}>
-        <View style={styles.summaryContainer}>
-          <Text style={styles.summaryTitle}>Pontos de Coleta Próximos</Text>
-          <Text style={styles.summaryItem}>Vidro: 3 pontos</Text>
-          <Text style={styles.summaryItem}>Plástico: 5 pontos</Text>
-          <Text style={styles.summaryItem}>Papel: 2 pontos</Text>
-        </View>
-
-        <View style={styles.statisticsContainer}>
-          <Text style={styles.statisticsTitle}>Sua Contribuição</Text>
-          <Text style={styles.statisticsItem}>Você já reciclou 10 kg de plástico!</Text>
-        </View>
-      </View>
-
+      {/* Rodapé com os ícones de navegação */}
       <View style={styles.footer}>
         <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('MaterialSelection')}>
           <FontAwesome5 name="recycle" size={24} color="green" />
@@ -86,8 +73,6 @@ const HomeScreen = ({ route }) => {
           <FontAwesome5 name="arrow-left" size={24} color="red" />
           <Text style={styles.iconText}>Sair</Text>
         </TouchableOpacity>
-        
-
       </View>
     </View>
   );
@@ -126,22 +111,25 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
   },
-  button: {
-    backgroundColor: '#7ff1ca',
-    padding: 10,
-    borderRadius: 5,
-    marginBottom: 10,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: '#89f2cc',
-    fontSize: 16,
-  },
   dadosContainer: {
     backgroundColor: '#7ff1ca',
     padding: 10,
     borderRadius: 5,
     marginBottom: 20,
+  },
+  dadosTitulo: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#fff',
+  },
+  camposDados: {
+    marginTop: 10,
+  },
+  dado: {
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 5,
   },
   content: {
     marginBottom: 20,
@@ -189,19 +177,6 @@ const styles = StyleSheet.create({
   iconText: {
     fontSize: 14,
   },
-
-  dado: {
-    fontSize: 16,
-    color: '#333',
-    marginBottom: 5,
-  },
-  dadosTitulo: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#fff',
-  },
-  
 });
 
 export default HomeScreen;

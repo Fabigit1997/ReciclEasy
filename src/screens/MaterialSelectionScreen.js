@@ -86,7 +86,6 @@ const getIconName = (material) => {
     'Metal': 'silverware-fork-knife',
     'Vidro': 'glass-fragile',
     'Óleo de cozinha': 'bottle-tonic',
-    'Tóxicos': 'biohazard',
     'Doação de Roupa': 'tshirt-crew',
     'Doação de Livros': 'book-open-page-variant',
     'Entulho': 'dump-truck'

@@ -1,46 +1,84 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Animated, ImageBackground } from 'react-native';
-import { MaterialCommunityIcons } from 'react-native-vector-icons'; // Alternativa de ícone
+import { MaterialCommunityIcons } from 'react-native-vector-icons';
 
 const SplashScreen = ({ navigation }) => {
-  const rotateAnim = new Animated.Value(0); // Inicializando a animação de rotação
+  const rotateAnim = useRef(new Animated.Value(0)).current; // Animação de rotação
+  const fadeAnim = useRef(new Animated.Value(0)).current;   // Animação de opacidade
+  const [text, setText] = useState('');
+  const [isFinalText, setIsFinalText] = useState(false);    // Para saber se é "ReciclEasy"
 
-  // Função de animação para o ícone de reciclagem
   useEffect(() => {
-    // Animação de rotação infinita
+    // Inicia a animação de rotação
     Animated.loop(
       Animated.timing(rotateAnim, {
         toValue: 1,
-        duration: 5000, // Duração de 5 segundos para uma rotação completa
+        duration: 5000,
         useNativeDriver: true,
       })
     ).start();
 
-    const timer = setTimeout(() => {
-      navigation.replace('Escolha'); // Navega para a tela de escolha
-    }, 5000); // Exibe por 5 segundos
+    const sequence = [
+      { text: 'Repense', duration: 2000 },
+      { text: 'Reduze', duration: 2000 },
+      { text: 'ReciclEasy', duration: 4000 },
+    ];
 
-    return () => clearTimeout(timer); // Limpa o timer ao desmontar
+    let index = 0;
+
+    const showNextText = () => {
+      if (index < sequence.length) {
+        const current = sequence[index];
+
+        setText(current.text);
+        setIsFinalText(current.text === 'ReciclEasy'); // Quando chegar no ReciclEasy, aumenta fonte
+
+        fadeAnim.setValue(0);
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 1000, // Mais lento para dar o efeito de "aparecer suavemente"
+          useNativeDriver: true,
+        }).start();
+
+        setTimeout(() => {
+          index++;
+          showNextText();
+        }, current.duration);
+      }
+    };
+
+    showNextText();
+
+    const timer = setTimeout(() => {
+      navigation.replace('Escolha');
+    }, 9000); // Tempo total ajustado (2+2+4+buffer)
+
+    return () => clearTimeout(timer);
   }, []);
 
-  // Função de interpolação para rotação contínua
   const rotate = rotateAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'], // Faz o ícone girar
+    outputRange: ['0deg', '360deg'],
   });
 
   return (
     <ImageBackground
-      source={require('../assets/background.png')} // Caminho da sua imagem de fundo
+      source={require('../assets/background.png')}
       style={styles.container}
     >
       <View style={styles.overlay}>
-        {/* Logo do aplicativo */}
-        <Text style={styles.logo}>ReciclEasy</Text>
-        {/* Ícone de Reciclagem com animação */}
         <Animated.View style={{ transform: [{ rotate }] }}>
-          <MaterialCommunityIcons name="recycle" size={150} color="white" />
+          <MaterialCommunityIcons name="recycle" size={170} color="white" />
         </Animated.View>
+
+        {/* Texto que aparece suavemente */}
+        <Animated.Text style={[
+          styles.text,
+          isFinalText && styles.finalText, // Se for o último texto, aplica estilo maior
+          { opacity: fadeAnim }
+        ]}>
+          {text}
+        </Animated.Text>
       </View>
     </ImageBackground>
   );
@@ -53,17 +91,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   overlay: {
-    backgroundColor: 'rgba(0, 0, 0, 0)', // Sobreposição para o texto e ícone
+    backgroundColor: 'rgba(0, 0, 0, 0)',
     padding: 20,
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  logo: {
-    fontSize: 40,
+  text: {
+    fontSize: 30,
     fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 20,
+    color: 'white',
+    marginTop: 20,
+    textAlign: 'center',
+  },
+  finalText: {
+    fontSize: 40, // Fonte maior para "ReciclEasy"
+    color: '#fff', // Verde claro para destacar, se quiser mudar a cor aqui
   },
 });
 

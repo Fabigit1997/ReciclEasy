@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
   greenBox: {
     backgroundColor: '#fff',
     borderRadius: 16,
-    padding: 20,
+    padding: 30,
     width: '90%',
     alignItems: 'center',
   },
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
   },
   lixeiraButton: {
     marginHorizontal: 6,
-    padding: 6,
+    padding: 5,
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',

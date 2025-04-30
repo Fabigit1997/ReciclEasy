@@ -3,6 +3,8 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityInd
 import { auth, db } from '../firebaseConfig';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { setDoc, doc } from 'firebase/firestore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function RegisterScreen({ navigation }) {
   const [nome, setNome] = useState('');
@@ -13,18 +15,23 @@ export default function RegisterScreen({ navigation }) {
   const [cep, setCep] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [mostrarSenha, setMostrarSenha] = useState(false);
 
-  // Validação do CEP
+  const [emailError, setEmailError] = useState(''); // erro de email
+
   const validarCep = (cepDigitado) => /^[0-9]{8}$/.test(cepDigitado);
 
-  // Buscar endereço pelo CEP
+  const validarEmail = (emailDigitado) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(emailDigitado);
+  };
+
   const buscarEndereco = async (cepDigitado) => {
     if (!validarCep(cepDigitado)) {
       Alert.alert('Erro', 'CEP inválido! Digite um CEP com 8 números.');
       setEndereco('');
       return;
     }
-
     try {
       const response = await fetch(`https://viacep.com.br/ws/${cepDigitado}/json/`);
       const data = await response.json();
@@ -39,26 +46,42 @@ export default function RegisterScreen({ navigation }) {
     }
   };
 
-  // Formatar telefone (11)947195485
   const formatarTelefone = (text) => {
     const cleaned = text.replace(/\D/g, '');
+    let formatted = '';
+
     if (cleaned.length <= 2) {
-      setTelefone(`(${cleaned}`);
-    } else if (cleaned.length <= 11) {
-      setTelefone(`(${cleaned.slice(0, 2)})${cleaned.slice(2, 11)}`);
+      formatted = `(${cleaned}`;
+    } else if (cleaned.length <= 6) {
+      formatted = `(${cleaned.slice(0, 2)}) ${cleaned.slice(2)}`;
+    } else if (cleaned.length <= 10) {
+      formatted = `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 6)}-${cleaned.slice(6)}`;
     } else {
-      setTelefone(`(${cleaned.slice(0, 2)})${cleaned.slice(2, 11)}`);
+      formatted = `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7, 11)}`;
+    }
+    setTelefone(formatted);
+  };
+
+  const saveUserData = async (nome, email, telefone, endereco, numeroResidencia, cep) => {
+    try {
+      await AsyncStorage.setItem('user_data', JSON.stringify({ nome, email, telefone, endereco, numeroResidencia, cep }));
+    } catch (error) {
+      console.error('Erro ao salvar dados:', error);
     }
   };
 
-  // Cadastrar
   const handleRegister = async () => {
-    if (!nome || !telefone || !endereco || !cep || !numeroResidencia || !password) {
-      Alert.alert('Erro', 'Preencha todos os campos obrigatórios!');
+    if (!nome || !telefone || !endereco || !cep || !numeroResidencia || !password || !email) {
+      Alert.alert('Erro', 'Preencha todos os campos!');
       return;
     }
 
     const emailMinusculo = email.toLowerCase();
+
+    if (!validarEmail(emailMinusculo)) {
+      setEmailError('Digite um email válido.');
+      return;
+    }
 
     setLoading(true);
     try {
@@ -74,8 +97,10 @@ export default function RegisterScreen({ navigation }) {
         cep,
       });
 
+      await saveUserData(nome, emailMinusculo, telefone, endereco, numeroResidencia, cep);
+
       Alert.alert('Sucesso!', 'Cadastro realizado com sucesso!');
-      navigation.navigate('Login');
+      navigation.navigate('Home', { nome, email: emailMinusculo, telefone, endereco, numeroResidencia, cep });
     } catch (error) {
       let errorMessage = 'Erro ao cadastrar. Tente novamente.';
       if (error.code === 'auth/email-already-in-use') {
@@ -91,7 +116,7 @@ export default function RegisterScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Cadastro de Usuario</Text>
+      <Text style={styles.title}>Cadastro de Usuário</Text>
 
       <TextInput
         style={styles.input}
@@ -101,13 +126,22 @@ export default function RegisterScreen({ navigation }) {
       />
 
       <TextInput
-        style={styles.input}
-        placeholder="E-mail (opcional)"
+        style={[styles.input, emailError ? styles.inputError : null]}
+        placeholder="E-mail"
         value={email}
-        onChangeText={(text) => setEmail(text.toLowerCase())}
+        onChangeText={(text) => {
+          const lower = text.toLowerCase();
+          setEmail(lower);
+          if (!validarEmail(lower)) {
+            setEmailError('Digite um email válido.');
+          } else {
+            setEmailError('');
+          }
+        }}
         keyboardType="email-address"
         autoCapitalize="none"
       />
+      {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
 
       <TextInput
         style={styles.input}
@@ -115,29 +149,21 @@ export default function RegisterScreen({ navigation }) {
         value={telefone}
         onChangeText={formatarTelefone}
         keyboardType="phone-pad"
-        maxLength={13}
       />
-
       <TextInput
         style={styles.input}
         placeholder="CEP"
         value={cep}
-        onChangeText={(text) => {
-          setCep(text);
-          if (text.length === 8) buscarEndereco(text);
-        }}
+        onChangeText={(text) => setCep(text.replace(/\D/g, ''))}
         keyboardType="numeric"
-        maxLength={8}
+        onBlur={() => buscarEndereco(cep)}
       />
-
       <TextInput
         style={styles.input}
         placeholder="Endereço"
         value={endereco}
         onChangeText={setEndereco}
-        editable={false}
       />
-
       <TextInput
         style={styles.input}
         placeholder="Número da residência"
@@ -145,67 +171,34 @@ export default function RegisterScreen({ navigation }) {
         onChangeText={setNumeroResidencia}
         keyboardType="numeric"
       />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Senha"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
+      <View style={styles.passwordContainer}>
+        <TextInput
+          style={styles.passwordInput}
+          placeholder="Senha"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry={!mostrarSenha}
+        />
+        <TouchableOpacity onPress={() => setMostrarSenha(!mostrarSenha)}>
+          <Ionicons name={mostrarSenha ? 'eye' : 'eye-off'} size={24} color="gray" />
+        </TouchableOpacity>
+      </View>
 
       <TouchableOpacity style={styles.button} onPress={handleRegister} disabled={loading}>
         {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Cadastrar</Text>}
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.registerButton} onPress={() => navigation.navigate('Login')}>
-        <Text style={styles.registerText}>Já tem uma conta? Faça login</Text>
       </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#a8f9d2',
-    padding: 20,
-  },
-  title: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    color: '#15B392',
-    marginBottom: 20,
-  },
-  input: {
-    width: '100%',
-    height: 50,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    marginVertical: 10,
-    elevation: 3,
-  },
-  button: {
-    backgroundColor: '#15B392',
-    paddingVertical: 12,
-    paddingHorizontal: 80,
-    borderRadius: 10,
-    marginTop: 20,
-    elevation: 3,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  registerButton: {
-    marginTop: 15,
-  },
-  registerText: {
-    fontSize: 16,
-    color: '#2E7D32',
-  },
+  container: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#a8f9d2', padding: 20 },
+  title: { fontSize: 26, fontWeight: 'bold', color: '#15B392', marginBottom: 20 },
+  input: { width: '100%', height: 50, backgroundColor: '#fff', borderRadius: 10, paddingHorizontal: 15, marginVertical: 8, elevation: 3 },
+  inputError: { borderColor: 'red', borderWidth: 1 },
+  errorText: { color: 'red', alignSelf: 'flex-start', marginLeft: 10, fontSize: 12, marginTop: -5 },
+  passwordContainer: { width: '100%', height: 50, backgroundColor: '#fff', borderRadius: 10, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 15, marginVertical: 10, elevation: 3 },
+  passwordInput: { flex: 1 },
+  button: { backgroundColor: '#15B392', paddingVertical: 12, paddingHorizontal: 80, borderRadius: 10, marginTop: 20, elevation: 3 },
+  buttonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
 });
