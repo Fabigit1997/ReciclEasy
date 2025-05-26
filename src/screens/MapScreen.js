@@ -1,65 +1,47 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
-import { useRoute } from '@react-navigation/native';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../firebaseConfig';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-const MapScreen = () => {
-  const route = useRoute();
-  const { material } = route.params || {};
-  const [pontos, setPontos] = useState([]);
-  const [loading, setLoading] = useState(true);
+const MapScreen = ({ route }) => {
+  const { latitude, longitude, material } = route.params;
 
-  useEffect(() => {
-    const fetchPontosColeta = async () => {
-      try {
-        const querySnapshot = await getDocs(collection(db, "pontos_coleta"));
-        const listaPontos = [];
-
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          if (data.materiais.includes(material)) { // Filtra pelo material selecionado
-            listaPontos.push({
-              id: doc.id,
-              ...data,
-            });
-          }
-        });
-
-        setPontos(listaPontos);
-      } catch (error) {
-        console.error("Erro ao buscar pontos de coleta:", error);
-      } finally {
-        setLoading(false);
-      }
+  const getIconName = (material) => {
+    const icons = {
+      'Plástico': 'recycle',
+      'Papelão': 'file-document-outline',
+      'Metal': 'silverware-fork-knife',
+      'Vidro': 'glass-fragile',
+      'Óleo de cozinha': 'bottle-tonic',
+      'Doação de Roupa': 'tshirt-crew',
+      'Doação de Livros': 'book-open-page-variant',
+      'Entulho': 'dump-truck',
+      'Componentes Eletrônicos': 'biohazard',
     };
-
-    fetchPontosColeta();
-  }, [material]);
+    return icons[material] || 'map-marker';
+  };
 
   return (
     <View style={styles.container}>
-      {loading ? (
-        <ActivityIndicator size="large" color="#63e6be" />
-      ) : (
-        <MapView style={styles.map} initialRegion={{
-          latitude: pontos[0]?.latitude || -23.55052,
-          longitude: pontos[0]?.longitude || -46.633308,
+      <Text style={styles.title}>Ponto de coleta para: {material}</Text>
+
+      <MapView
+        style={styles.map}
+        initialRegion={{
+          latitude: latitude,
+          longitude: longitude,
           latitudeDelta: 0.01,
           longitudeDelta: 0.01,
-        }}>
-          {pontos.map((ponto) => (
-            <Marker
-              key={ponto.id}
-              coordinate={{ latitude: ponto.latitude, longitude: ponto.longitude }}
-              title={ponto.nome}
-              description={`Materiais aceitos: ${ponto.materiais.join(", ")}`}
-            />
-          ))}
-        </MapView>
-      )}
-      <Text style={styles.texto}>Locais para descartar: {material}</Text>
+        }}
+      >
+        <Marker
+          coordinate={{ latitude: latitude, longitude: longitude }}
+          title={`Coleta de ${material}`}
+          description={`Ponto de coleta para ${material}`}
+        >
+          <Icon name={getIconName(material)} size={30} color="#28c7a3" />
+        </Marker>
+      </MapView>
     </View>
   );
 };
@@ -68,20 +50,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  map: {
-    flex: 1,
-  },
-  texto: {
-    position: 'absolute',
-    top: 20,
-    left: 10,
-    right: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    padding: 10,
-    borderRadius: 8,
-    fontSize: 16,
+  title: {
+    padding: 15,
+    fontSize: 18,
     fontWeight: 'bold',
     textAlign: 'center',
+    backgroundColor: '#63e6be',
+    color: '#fff',
+  },
+  map: {
+    width: Dimensions.get('window').width,
+    height: Dimensions.get('window').height - 60,
   },
 });
 

@@ -8,39 +8,35 @@ const MaterialSelectionScreen = () => {
   const [selectedMaterial, setSelectedMaterial] = useState('');
   const navigation = useNavigation();
 
-  // Pontos de coleta para cada material
-  const pontosDeColeta = {
+  const pontos_coleta = {
     'Plástico': { latitude: -23.55052, longitude: -46.633308 },
-    'Papel': { latitude: -23.556522, longitude: -46.645308 },
+    'Papelão': { latitude: -23.556522, longitude: -46.645308 },
     'Metal': { latitude: -23.560922, longitude: -46.638308 },
     'Vidro': { latitude: -23.545520, longitude: -46.635308 },
-   
-    'Tóxicos': { latitude: -23.552000, longitude: -46.642800 },
+    'Componentes Eletrônicos': { latitude: -23.552000, longitude: -46.642800 },
     'Entulho': { latitude: -23.559500, longitude: -46.650500 },
     'Óleo de cozinha': { latitude: -23.558000, longitude: -46.640500 },
     'Doação de Roupa': { latitude: -23.554000, longitude: -46.646800 },
     'Doação de Livros': { latitude: -23.557000, longitude: -46.649000 },
-    
   };
 
-  // Quando o usuário escolhe um material
   const handleMaterialSelect = (material) => {
     setSelectedMaterial(material);
     setModalVisible(false);
 
-    const local = pontosDeColeta[material];
+    const local = pontos_coleta[material];
     if (local) {
       navigation.navigate('Map', {
         latitude: local.latitude,
         longitude: local.longitude,
-        materialSelecionado: material
+        material: material
       });
     }
   };
 
   return (
     <ImageBackground 
-      source={require('../assets/TelaSeleçãoMaterial.png')} // Caminho correto para a imagem
+      source={require('../assets/TelaSeleçãoMaterial.png')}
       style={styles.backgroundImage}
     >
       <View style={styles.container}>
@@ -58,7 +54,7 @@ const MaterialSelectionScreen = () => {
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>Escolha um Material:</Text>
 
-              {Object.keys(pontosDeColeta).map((material, index) => (
+              {Object.keys(pontos_coleta).map((material, index) => (
                 <TouchableOpacity key={index} style={styles.materialButton} onPress={() => handleMaterialSelect(material)}>
                   <Icon name={getIconName(material)} size={24} color="white" />
                   <Text style={styles.materialText}>{material}</Text>
@@ -78,17 +74,17 @@ const MaterialSelectionScreen = () => {
   );
 };
 
-// Função para retornar o ícone correspondente a cada material
 const getIconName = (material) => {
   const icons = {
     'Plástico': 'recycle',
-    'Papel': 'file-document-outline',
+    'Papelão': 'file-document-outline',
     'Metal': 'silverware-fork-knife',
     'Vidro': 'glass-fragile',
     'Óleo de cozinha': 'bottle-tonic',
     'Doação de Roupa': 'tshirt-crew',
     'Doação de Livros': 'book-open-page-variant',
-    'Entulho': 'dump-truck'
+    'Entulho': 'dump-truck',
+    'Componentes Eletrônicos': 'biohazard',
   };
   return icons[material] || 'help-circle-outline';
 };
@@ -108,7 +104,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   button: {
-    backgroundColor: '#63e6be',  // Verde escuro
+    backgroundColor: '#63e6be',
     paddingVertical: 12,
     paddingHorizontal: 80,
     borderRadius: 10,
