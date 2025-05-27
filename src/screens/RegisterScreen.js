@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import {
+  View, Text, TextInput, TouchableOpacity,
+  StyleSheet, Alert, ActivityIndicator
+} from 'react-native';
 import { auth, db } from '../firebaseConfig';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { setDoc, doc } from 'firebase/firestore';
@@ -10,14 +13,15 @@ export default function RegisterScreen({ navigation }) {
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [telefone, setTelefone] = useState('');
-  const [endereco, setEndereco] = useState('');
+  const [rua, setRua] = useState('');
   const [numeroResidencia, setNumeroResidencia] = useState('');
+  const [bairro, setBairro] = useState('');
+  const [cidade, setCidade] = useState('');
   const [cep, setCep] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [mostrarSenha, setMostrarSenha] = useState(false);
-
-  const [emailError, setEmailError] = useState(''); // erro de email
+  const [emailError, setEmailError] = useState('');
 
   const validarCep = (cepDigitado) => /^[0-9]{8}$/.test(cepDigitado);
 
@@ -29,7 +33,6 @@ export default function RegisterScreen({ navigation }) {
   const buscarEndereco = async (cepDigitado) => {
     if (!validarCep(cepDigitado)) {
       Alert.alert('Erro', 'CEP inválido! Digite um CEP com 8 números.');
-      setEndereco('');
       return;
     }
     try {
@@ -37,9 +40,10 @@ export default function RegisterScreen({ navigation }) {
       const data = await response.json();
       if (data.erro) {
         Alert.alert('Erro', 'CEP não encontrado!');
-        setEndereco('');
       } else {
-        setEndereco(`${data.logradouro}, ${data.bairro}, ${data.localidade} - ${data.uf}`);
+        setRua(data.logradouro);
+        setBairro(data.bairro);
+        setCidade(data.localidade);
       }
     } catch (error) {
       Alert.alert('Erro', 'Falha ao buscar o endereço!');
@@ -62,16 +66,16 @@ export default function RegisterScreen({ navigation }) {
     setTelefone(formatted);
   };
 
-  const saveUserData = async (nome, email, telefone, endereco, numeroResidencia, cep) => {
+  const saveUserData = async (nome, email, telefone, rua, numeroResidencia, bairro, cidade, cep) => {
     try {
-      await AsyncStorage.setItem('user_data', JSON.stringify({ nome, email, telefone, endereco, numeroResidencia, cep }));
+      await AsyncStorage.setItem('user_data', JSON.stringify({ nome, email, telefone, rua, numeroResidencia, bairro, cidade, cep }));
     } catch (error) {
       console.error('Erro ao salvar dados:', error);
     }
   };
 
   const handleRegister = async () => {
-    if (!nome || !telefone || !endereco || !cep || !numeroResidencia || !password || !email) {
+    if (!nome || !telefone || !rua || !cep || !numeroResidencia || !bairro || !cidade || !password || !email) {
       Alert.alert('Erro', 'Preencha todos os campos!');
       return;
     }
@@ -92,15 +96,20 @@ export default function RegisterScreen({ navigation }) {
         nome,
         email: emailMinusculo,
         telefone,
-        endereco,
+        rua,
         numeroResidencia,
+        bairro,
+        cidade,
         cep,
       });
 
-      await saveUserData(nome, emailMinusculo, telefone, endereco, numeroResidencia, cep);
+      await saveUserData(nome, emailMinusculo, telefone, rua, numeroResidencia, bairro, cidade, cep);
 
       Alert.alert('Sucesso!', 'Cadastro realizado com sucesso!');
-      navigation.navigate('Home', { nome, email: emailMinusculo, telefone, endereco, numeroResidencia, cep });
+      navigation.navigate('Home', {
+        nome, email: emailMinusculo, telefone,
+        rua, numeroResidencia, bairro, cidade, cep
+      });
     } catch (error) {
       let errorMessage = 'Erro ao cadastrar. Tente novamente.';
       if (error.code === 'auth/email-already-in-use') {
@@ -118,12 +127,7 @@ export default function RegisterScreen({ navigation }) {
     <View style={styles.container}>
       <Text style={styles.title}>Cadastro de Usuário</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Nome Completo"
-        value={nome}
-        onChangeText={setNome}
-      />
+      <TextInput style={styles.input} placeholder="Nome Completo" value={nome} onChangeText={setNome} />
 
       <TextInput
         style={[styles.input, emailError ? styles.inputError : null]}
@@ -132,45 +136,20 @@ export default function RegisterScreen({ navigation }) {
         onChangeText={(text) => {
           const lower = text.toLowerCase();
           setEmail(lower);
-          if (!validarEmail(lower)) {
-            setEmailError('Digite um email válido.');
-          } else {
-            setEmailError('');
-          }
+          setEmailError(validarEmail(lower) ? '' : 'Digite um email válido.');
         }}
         keyboardType="email-address"
         autoCapitalize="none"
       />
       {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
 
-      <TextInput
-        style={styles.input}
-        placeholder="Telefone"
-        value={telefone}
-        onChangeText={formatarTelefone}
-        keyboardType="phone-pad"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="CEP"
-        value={cep}
-        onChangeText={(text) => setCep(text.replace(/\D/g, ''))}
-        keyboardType="numeric"
-        onBlur={() => buscarEndereco(cep)}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Endereço"
-        value={endereco}
-        onChangeText={setEndereco}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Número da residência"
-        value={numeroResidencia}
-        onChangeText={setNumeroResidencia}
-        keyboardType="numeric"
-      />
+      <TextInput style={styles.input} placeholder="Telefone" value={telefone} onChangeText={formatarTelefone} keyboardType="phone-pad" />
+      <TextInput style={styles.input} placeholder="CEP" value={cep} onChangeText={(text) => setCep(text.replace(/\D/g, ''))} keyboardType="numeric" onBlur={() => buscarEndereco(cep)} />
+      <TextInput style={styles.input} placeholder="Rua" value={rua} onChangeText={setRua} />
+      <TextInput style={styles.input} placeholder="Número da residência" value={numeroResidencia} onChangeText={setNumeroResidencia} keyboardType="numeric" />
+      <TextInput style={styles.input} placeholder="Bairro" value={bairro} onChangeText={setBairro} />
+      <TextInput style={styles.input} placeholder="Cidade" value={cidade} onChangeText={setCidade} />
+
       <View style={styles.passwordContainer}>
         <TextInput
           style={styles.passwordInput}

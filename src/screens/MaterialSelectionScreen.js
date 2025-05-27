@@ -13,23 +13,23 @@ const MaterialSelectionScreen = () => {
     'Papelão': { latitude: -23.556522, longitude: -46.645308 },
     'Metal': { latitude: -23.560922, longitude: -46.638308 },
     'Vidro': { latitude: -23.545520, longitude: -46.635308 },
-    'Componentes Eletrônicos': { latitude: -23.552000, longitude: -46.642800 },
+    'Componentes_Eletrônicos': { latitude: -23.552000, longitude: -46.642800 },
     'Entulho': { latitude: -23.559500, longitude: -46.650500 },
     'Óleo de cozinha': { latitude: -23.558000, longitude: -46.640500 },
     'Doação de Roupa': { latitude: -23.554000, longitude: -46.646800 },
     'Doação de Livros': { latitude: -23.557000, longitude: -46.649000 },
   };
 
-  const handleMaterialSelect = (material) => {
-    setSelectedMaterial(material);
+  const handleMaterialSelect = (materiais) => {
+    setSelectedMaterial(materiais);
     setModalVisible(false);
 
-    const local = pontos_coleta[material];
+    const local = pontos_coleta[materiais];
     if (local) {
       navigation.navigate('Map', {
         latitude: local.latitude,
         longitude: local.longitude,
-        material: material
+        material: materiais
       });
     }
   };
@@ -54,10 +54,10 @@ const MaterialSelectionScreen = () => {
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>Escolha um Material:</Text>
 
-              {Object.keys(pontos_coleta).map((material, index) => (
-                <TouchableOpacity key={index} style={styles.materialButton} onPress={() => handleMaterialSelect(material)}>
-                  <Icon name={getIconName(material)} size={24} color="white" />
-                  <Text style={styles.materialText}>{material}</Text>
+              {Object.keys(pontos_coleta).map((materiais, index) => (
+                <TouchableOpacity key={index} style={styles.materialButton} onPress={() => handleMaterialSelect(materiais)}>
+                  <Icon name={getIconName(materiais)} size={24} color="white" />
+                  <Text style={styles.materialText}>{materiais}</Text>
                 </TouchableOpacity>
               ))}
 
@@ -74,7 +74,7 @@ const MaterialSelectionScreen = () => {
   );
 };
 
-const getIconName = (material) => {
+const getIconName = (materiais) => {
   const icons = {
     'Plástico': 'recycle',
     'Papelão': 'file-document-outline',
@@ -84,9 +84,9 @@ const getIconName = (material) => {
     'Doação de Roupa': 'tshirt-crew',
     'Doação de Livros': 'book-open-page-variant',
     'Entulho': 'dump-truck',
-    'Componentes Eletrônicos': 'biohazard',
+    'Componentes_Eletrônicos': 'biohazard',
   };
-  return icons[material] || 'help-circle-outline';
+  return icons[materiais] || 'help-circle-outline';
 };
 
 const styles = StyleSheet.create({

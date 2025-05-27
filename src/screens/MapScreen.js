@@ -1,67 +1,124 @@
-import React from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { View, StyleSheet, Dimensions } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { collection, getDocs } from 'firebase/firestore';
+import { useRoute } from '@react-navigation/native';
+import { db } from '../firebaseConfig';
+import catadorIcon from '../assets/catador.png';
+import pontoIcon from '../assets/ponto.png';
 
-const MapScreen = ({ route }) => {
-  const { latitude, longitude, material } = route.params;
+export default function MapaScreen() {
+  const route = useRoute();
+  const mapRef = useRef(null);
 
-  const getIconName = (material) => {
-    const icons = {
-      'Plástico': 'recycle',
-      'Papelão': 'file-document-outline',
-      'Metal': 'silverware-fork-knife',
-      'Vidro': 'glass-fragile',
-      'Óleo de cozinha': 'bottle-tonic',
-      'Doação de Roupa': 'tshirt-crew',
-      'Doação de Livros': 'book-open-page-variant',
-      'Entulho': 'dump-truck',
-      'Componentes Eletrônicos': 'biohazard',
-    };
-    return icons[material] || 'map-marker';
-  };
+  const [pontos, setPontos] = useState([]);
+
+  const { latitude, longitude, material } = route.params || {};
+
+  useEffect(() => {
+    async function carregarPontos() {
+      try {
+        const pontosColetaRef = collection(db, 'pontos_coleta');
+        const catadoresRef = collection(db, 'Catador');
+
+        const [pontosSnapshot, catadoresSnapshot] = await Promise.all([
+          getDocs(pontosColetaRef),
+          getDocs(catadoresRef),
+        ]);
+
+        const pontosColeta = pontosSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          tipo: 'Ponto de Coleta'
+        }));
+
+        const catadores = catadoresSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          tipo: 'Catador'
+        }));
+
+        setPontos([...pontosColeta, ...catadores]);
+      } catch (error) {
+        console.error('Erro ao buscar dados:', error);
+      }
+    }
+
+    carregarPontos();
+  }, []);
+
+  useEffect(() => {
+  if (mapRef.current && material) {
+    const catadoresFiltrados = pontos.filter(p => 
+      p.tipo === 'Catador' &&
+      p.tipoMateriais &&
+      p.tipoMateriais.toLowerCase().includes(material.toLowerCase())
+    );
+
+    if (catadoresFiltrados.length > 0) {
+      const avgLat = catadoresFiltrados.reduce((sum, p) => sum + parseFloat(p.latitude), 0) / catadoresFiltrados.length;
+      const avgLng = catadoresFiltrados.reduce((sum, p) => sum + parseFloat(p.longitude), 0) / catadoresFiltrados.length;
+
+      mapRef.current.animateToRegion({
+        latitude: avgLat,
+        longitude: avgLng,
+        latitudeDelta: 0.03,
+        longitudeDelta: 0.03,
+      }, 1000);
+    } else {
+      console.warn('Nenhum catador encontrado para o material selecionado:', material);
+    }
+  } else if (latitude && longitude && mapRef.current) {
+    mapRef.current.animateToRegion({
+      latitude,
+      longitude,
+      latitudeDelta: 0.01,
+      longitudeDelta: 0.01,
+    }, 1000);
+  }
+}, [pontos, material]);
+
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Ponto de coleta para: {material}</Text>
-
       <MapView
-        style={styles.map}
+        ref={mapRef}
+        style={styles.mapa}
         initialRegion={{
-          latitude: latitude,
-          longitude: longitude,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
+          latitude: -23.55052,
+          longitude: -46.633308,
+          latitudeDelta: 0.05,
+          longitudeDelta: 0.05,
         }}
       >
-        <Marker
-          coordinate={{ latitude: latitude, longitude: longitude }}
-          title={`Coleta de ${material}`}
-          description={`Ponto de coleta para ${material}`}
-        >
-          <Icon name={getIconName(material)} size={30} color="#28c7a3" />
-        </Marker>
+        {pontos.map((ponto) => {
+          const lat = Number(ponto.latitude);
+          const lng = Number(ponto.longitude);
+
+          if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
+            console.warn('Coordenadas inválidas ignoradas:', ponto);
+            return null;
+          }
+
+          return (
+            <Marker
+              key={ponto.id}
+              coordinate={{ latitude: lat, longitude: lng }}
+              title={ponto.nome || 'Sem nome'}
+              description={`${ponto.tipo} - ${ponto.materiais || ponto.tipoMateriais}`}
+              image={ponto.tipo === 'Catador' ? catadorIcon : pontoIcon}
+            />
+          );
+        })}
       </MapView>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  title: {
-    padding: 15,
-    fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    backgroundColor: '#63e6be',
-    color: '#fff',
-  },
-  map: {
+  container: { flex: 1 },
+  mapa: {
     width: Dimensions.get('window').width,
-    height: Dimensions.get('window').height - 60,
+    height: Dimensions.get('window').height,
   },
 });
-
-export default MapScreen;

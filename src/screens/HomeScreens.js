@@ -6,7 +6,7 @@ import * as ImagePicker from 'expo-image-picker';
 
 const HomeScreen = ({ route }) => {
   const navigation = useNavigation();
-  const { nome, email, tipo, avatar, endereco, numeroResidencia, cep } = route.params || {};
+  const { nome, email, telefone, avatar, rua, numeroResidencia, cep } = route.params || {};
   const [mostrarDados, setMostrarDados] = useState(false);
   const [selectedAvatar, setSelectedAvatar] = useState(avatar); // para armazenar a foto selecionada
 
@@ -47,8 +47,8 @@ const HomeScreen = ({ route }) => {
           <View style={styles.camposDados}>
             <Text style={styles.dado}>Nome: {nome || ' '}</Text>
             <Text style={styles.dado}>Email: {email || ' '}</Text>
-            <Text style={styles.dado}>Tipo: {tipo || ' '}</Text>
-            <Text style={styles.dado}>Endereço: {endereco || ' '}</Text>
+            <Text style={styles.dado}>Telefone: {telefone || ' '}</Text>
+            <Text style={styles.dado}>Rua: {rua|| ' '}</Text>
             <Text style={styles.dado}>Número: {numeroResidencia || ' '}</Text>
             <Text style={styles.dado}>CEP: {cep || ' '}</Text>
           </View>
