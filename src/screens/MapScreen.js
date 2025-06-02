@@ -6,8 +6,11 @@ import { useRoute } from '@react-navigation/native';
 import { db } from '../firebaseConfig';
 import catadorIcon from '../assets/catador.png';
 import pontoIcon from '../assets/ponto.png';
+import { useNavigation } from '@react-navigation/native';
+
 
 export default function MapaScreen() {
+  const navigation = useNavigation();
   const route = useRoute();
   const mapRef = useRef(null);
 
@@ -107,6 +110,14 @@ export default function MapaScreen() {
               title={ponto.nome || 'Sem nome'}
               description={`${ponto.tipo} - ${ponto.materiais || ponto.tipoMateriais}`}
               image={ponto.tipo === 'Catador' ? catadorIcon : pontoIcon}
+              onPress={() => {
+                if (ponto.tipo === 'Catador') {
+                  navigation.navigate('Chat', {
+                    chatId: ponto.uid || ponto.id,
+                    catadorNome: ponto.nome || 'Catador',
+                  });
+                }
+              }}
             />
           );
         })}
@@ -116,7 +127,9 @@ export default function MapaScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: {
+    flex: 1,
+  },
   mapa: {
     width: Dimensions.get('window').width,
     height: Dimensions.get('window').height,
