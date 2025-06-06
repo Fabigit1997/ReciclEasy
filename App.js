@@ -12,7 +12,7 @@ import MaterialSelectionScreen from './src/screens/MaterialSelectionScreen';
 import MapScreen from './src/screens/MapScreen';
 import ChatScreen from './src/screens/ChatScreen';
 import EducationScreen from './src/screens/EducationScreen';
-import PontosService from './src/services/PontosService';
+
 
 const Stack = createStackNavigator();
 
@@ -30,7 +30,7 @@ export default function App() {
         <Stack.Screen name="Map" component={MapScreen} />
         <Stack.Screen name="Chat" component={ChatScreen} />
         <Stack.Screen name="ConteudoEducativo" component={EducationScreen} />
-        <Stack.Screen name="Ponto de Serviço" component={PontosService}/>
+        
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -34,10 +34,10 @@ export default function CadastroCatador({ navigation }) {
   const [registroCooperativa, setRegistroCooperativa] = useState('');
   const [emailError, setEmailError] = useState('');
   const [materiais, setMateriais] = useState({
-    plastico: false,
-    papelão: false,
-    vidro: false,
-    metal: false,
+    Plastico: false,
+    Papelão: false,
+    Vidro: false,
+    Metal: false,
     Componentes_Eletrônicos:false
   });
 

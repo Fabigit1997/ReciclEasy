@@ -26,11 +26,12 @@ const MaterialSelectionScreen = () => {
 
     const local = pontos_coleta[materiais];
     if (local) {
-      navigation.navigate('Map', {
-        latitude: local.latitude,
-        longitude: local.longitude,
-        material: materiais
-      });
+    navigation.navigate('Map', {
+  latitude: -23.55,
+  longitude: -46.63,
+  material: materiais
+});
+
     }
   };
 
