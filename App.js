@@ -12,7 +12,7 @@ import MaterialSelectionScreen from './src/screens/MaterialSelectionScreen';
 import MapScreen from './src/screens/MapScreen';
 import ChatScreen from './src/screens/ChatScreen';
 import EducationScreen from './src/screens/EducationScreen';
-
+import ForgotPasswordScreen from './src/screens/ForgotPasswordScreen';
 
 const Stack = createStackNavigator();
 
@@ -30,7 +30,7 @@ export default function App() {
         <Stack.Screen name="Map" component={MapScreen} />
         <Stack.Screen name="Chat" component={ChatScreen} />
         <Stack.Screen name="ConteudoEducativo" component={EducationScreen} />
-        
+        <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
