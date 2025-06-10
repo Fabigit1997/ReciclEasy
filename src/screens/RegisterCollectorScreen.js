@@ -14,6 +14,7 @@ import { db, auth } from '../firebaseConfig';
 import Geocoder from 'react-native-geocoding';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 Geocoder.init('AIzaSyCUArq8W1NLKOI7_7ST6BFcYFj95S0JAfs'); // Substitua pela sua API KEY
 
@@ -115,7 +116,8 @@ await addDoc(collection(db, 'Catador'), {
   registroCooperativa,
   latitude: location.lat,
   longitude: location.lng,
-  materiais: materiaisSelecionados, // <-- Agora é um array de strings
+  materiais: materiaisSelecionados, 
+  fotoUrl: null,
 });
 
 

@@ -9,6 +9,8 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
+  Alert,
+  Animated,
 } from 'react-native';
 import {
   collection,
@@ -17,17 +19,20 @@ import {
   orderBy,
   query,
   serverTimestamp,
+  deleteDoc,
+  doc,
 } from 'firebase/firestore';
 import { auth, db } from '../firebaseConfig';
 
 const ChatScreen = ({ route }) => {
-  const { chatId, catadorNome } = route.params; // Pegando chatId e catadorNome
+  const { chatId, catadorNome } = route.params;
   const currentUser = auth.currentUser;
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
+  const [animations, setAnimations] = useState({});
 
   useEffect(() => {
-    if (!chatId) return; // Se não tiver chatId, não faz nada
+    if (!chatId) return;
 
     const messagesRef = collection(db, 'chats', chatId, 'messages');
     const q = query(messagesRef, orderBy('createdAt', 'asc'));
@@ -38,6 +43,17 @@ const ChatScreen = ({ route }) => {
         ...doc.data(),
       }));
       setMessages(newMessages);
+
+      // Inicializa as animações para novas mensagens
+      const newAnimations = {};
+      newMessages.forEach(msg => {
+        if (!animations[msg.id]) {
+          newAnimations[msg.id] = new Animated.Value(1);
+        } else {
+          newAnimations[msg.id] = animations[msg.id];
+        }
+      });
+      setAnimations(newAnimations);
     });
 
     return unsubscribe;
@@ -57,9 +73,38 @@ const ChatScreen = ({ route }) => {
     setInput('');
   };
 
+  const handleDeleteMessage = (messageId) => {
+    Alert.alert(
+      'Confirmar exclusão',
+      'Tem certeza que deseja apagar esta mensagem?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Apagar',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              // Animação de fade antes de apagar
+              Animated.timing(animations[messageId], {
+                toValue: 0,
+                duration: 300,
+                useNativeDriver: true,
+              }).start(async () => {
+                const messageRef = doc(db, 'chats', chatId, 'messages', messageId);
+                await deleteDoc(messageRef);
+              });
+            } catch (error) {
+              console.error('Erro ao apagar mensagem:', error);
+            }
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
   const renderItem = ({ item }) => {
     const isUser = item.userId === currentUser.uid;
-
     const time = item.createdAt?.toDate
       ? new Date(item.createdAt.toDate()).toLocaleTimeString([], {
           hour: '2-digit',
@@ -68,10 +113,11 @@ const ChatScreen = ({ route }) => {
       : '';
 
     return (
-      <View
+      <Animated.View
         style={[
           styles.messageContainer,
           isUser ? styles.rightAlign : styles.leftAlign,
+          { opacity: animations[item.id] || 1 },
         ]}
       >
         {!isUser && item.avatar && (
@@ -89,10 +135,19 @@ const ChatScreen = ({ route }) => {
           <Text style={styles.timeText}>{time}</Text>
         </View>
 
+        {isUser && (
+          <TouchableOpacity
+            style={styles.trashIcon}
+            onPress={() => handleDeleteMessage(item.id)}
+          >
+            <Text style={styles.trashEmoji}>🗑️</Text>
+          </TouchableOpacity>
+        )}
+
         {isUser && item.avatar && (
           <Image source={{ uri: item.avatar }} style={styles.avatar} />
         )}
-      </View>
+      </Animated.View>
     );
   };
 
@@ -102,7 +157,6 @@ const ChatScreen = ({ route }) => {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={90}
     >
-      {/* Mostrando o nome do catador no topo */}
       <View style={styles.header}>
         <Text style={styles.headerText}>{catadorNome || 'Chat'}</Text>
       </View>
@@ -135,11 +189,11 @@ export default ChatScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#eef2f5',
+    backgroundColor: '#fafff5',
   },
   header: {
     padding: 15,
-    backgroundColor: '#0084ff',
+    backgroundColor: '#a8f9d4',
     alignItems: 'center',
   },
   headerText: {
@@ -168,7 +222,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   sentMessage: {
-    backgroundColor: '#DCF8C6',
+    backgroundColor: '#ddfada',
     marginLeft: 'auto',
   },
   receivedMessage: {
@@ -217,7 +271,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   sendButton: {
-    backgroundColor: '#0084ff',
+    backgroundColor: '#00FF9C',
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
@@ -226,5 +280,12 @@ const styles = StyleSheet.create({
   sendButtonText: {
     color: '#fff',
     fontWeight: 'bold',
+  },
+  trashIcon: {
+    marginLeft: 6,
+    marginTop: 5,
+  },
+  trashEmoji: {
+    fontSize: 18,
   },
 });
